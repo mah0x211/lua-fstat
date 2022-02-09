@@ -29,8 +29,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-typedef int (*statfn_t)(const char *, struct stat *);
-
 static int fstat_lua(lua_State *L)
 {
     lua_Integer iv  = -1;
