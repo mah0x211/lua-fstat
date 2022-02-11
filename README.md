@@ -39,7 +39,7 @@ print(dump(stat))
 ```
 
 
-## dir, err, errno = fstat( v [, follow_symlink] )
+## stat, err, errno = fstat( v [, follow_symlink] )
 
 open a directory stream corresponding to the directory `name`.
 
