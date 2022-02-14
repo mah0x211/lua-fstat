@@ -31,6 +31,7 @@ print(dump(stat))
 --     mode = 16877,
 --     mtime = 1644412057,
 --     nlink = 14,
+--     perm = "0755",
 --     rdev = 0,
 --     size = 448,
 --     type = "directory",
@@ -64,6 +65,7 @@ open a directory stream corresponding to the directory `name`.
   - `atime:integer`: time of last access.
   - `mtime:integer`: time of last modification.
   - `ctime:integer`: time of last status change.
+  - `perm:string`: file permission bits (include the sticky bit).
   - `type:string`: `nil` or one of the following; `'file'`, `'directory'`, `'symlink'`, `'character_device'`, `'block_device'`, `'socket'`, `'fifo'`.
 - `err:string`: error message on failure.
 - `errno:integer`: error number.
