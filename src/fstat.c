@@ -35,6 +35,7 @@ static int fstat_lua(lua_State *L)
     int fd          = -1;
     int flgs        = O_RDONLY | O_CLOEXEC;
     struct stat buf = {0};
+    char perm[6]    = {0};
 
     // followsymlinks option: default true
     if (!lauxh_optboolean(L, 2, 1)) {
@@ -94,6 +95,8 @@ static int fstat_lua(lua_State *L)
     lauxh_pushint2tbl(L, "atime", buf.st_atime);
     lauxh_pushint2tbl(L, "mtime", buf.st_mtime);
     lauxh_pushint2tbl(L, "ctime", buf.st_ctime);
+    snprintf(perm, sizeof(perm), "%#o", buf.st_mode & 01777);
+    lauxh_pushstr2tbl(L, "perm", perm);
     switch (buf.st_mode & S_IFMT) {
     case S_IFREG:
         lauxh_pushstr2tbl(L, "type", "file");

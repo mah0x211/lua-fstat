@@ -23,6 +23,7 @@ function testcase.fstat()
         atime = assert.is_int,
         mtime = assert.is_int,
         ctime = assert.is_int,
+        perm = assert.is_string,
         type = assert.is_string,
     }) do
         isfn(stat[k])
