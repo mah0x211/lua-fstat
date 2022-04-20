@@ -1,6 +1,7 @@
 # lua-fstat
 
 [![test](https://github.com/mah0x211/lua-fstat/actions/workflows/test.yml/badge.svg)](https://github.com/mah0x211/lua-fstat/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/mah0x211/lua-fstat/branch/master/graph/badge.svg)](https://codecov.io/gh/mah0x211/lua-fstat)
 
 obtains information about the file pointed to by the argument.
 
