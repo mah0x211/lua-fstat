@@ -31,8 +31,8 @@
 
 static int fstat_lua(lua_State *L)
 {
-    lua_Integer iv  = -1;
     int fd          = -1;
+    int is_open     = 0;
     int flgs        = O_RDONLY | O_CLOEXEC;
     struct stat buf = {0};
     char perm[6]    = {0};
@@ -46,7 +46,13 @@ static int fstat_lua(lua_State *L)
     switch (lua_type(L, 1)) {
     case LUA_TSTRING: {
         const char *path = lua_tostring(L, 1);
-        fd               = open(path, flgs);
+        if ((fd = open(path, flgs)) == -1) {
+            lua_pushnil(L);
+            lua_pushstring(L, strerror(errno));
+            lua_pushinteger(L, errno);
+            return 3;
+        }
+        is_open = 1;
     } break;
 
     case LUA_TUSERDATA: {
@@ -54,14 +60,14 @@ static int fstat_lua(lua_State *L)
         fd      = fileno(f);
     } break;
 
-    case LUA_TNUMBER:
-        iv = lauxh_checkinteger(L, 1);
+    case LUA_TNUMBER: {
+        lua_Integer iv = lauxh_checkinteger(L, 1);
         if (iv < 0 || iv > INT_MAX) {
             return lauxh_argerror(L, 1, "integer (0-%d) expected, got %d",
                                   INT_MAX, iv);
         }
         fd = iv;
-        break;
+    } break;
 
     default:
         return lauxh_argerror(L, 1, "string, file or integer expected, got %s",
@@ -69,14 +75,16 @@ static int fstat_lua(lua_State *L)
     }
 
     // got error
-    if (fd == -1 || fstat(fd, &buf) == -1) {
-        if (iv == -1 && fd != -1) {
+    if (fstat(fd, &buf) == -1) {
+        if (is_open) {
             close(fd);
         }
         lua_pushnil(L);
         lua_pushstring(L, strerror(errno));
         lua_pushinteger(L, errno);
         return 3;
+    } else if (is_open) {
+        close(fd);
     }
 
     // set fields
