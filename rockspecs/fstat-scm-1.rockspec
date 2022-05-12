@@ -1,18 +1,19 @@
-rockspec_format = '3.0'
-package = 'fstat'
-version = 'scm-1'
+rockspec_format = "3.0"
+package = "fstat"
+version = "scm-1"
 source = {
-    url = 'git+https://github.com/mah0x211/lua-fstat.git',
+    url = "git+https://github.com/mah0x211/lua-fstat.git",
 }
 description = {
-    summary = 'obtains information about the file pointed to by the argument.',
-    homepage = 'https://github.com/mah0x211/lua-fstat',
-    license = 'MIT/X11',
-    maintainer = 'Masatoshi Fukunaga'
+    summary = "obtains information about the file pointed to by the argument.",
+    homepage = "https://github.com/mah0x211/lua-fstat",
+    license = "MIT/X11",
+    maintainer = "Masatoshi Fukunaga",
 }
 dependencies = {
-    'lua >= 5.1',
-    'lauxhlib >= 0.1.0',
+    "lua >= 5.1",
+    "errno >= 0.3.0",
+    "lauxhlib >= 0.1.0",
 }
 build = {
     type = "make",

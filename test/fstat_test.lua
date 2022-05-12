@@ -6,9 +6,8 @@ local fstat = require('fstat')
 
 function testcase.fstat_directory_path()
     -- test that get stat by pathname
-    local stat, err, eno = assert(fstat('./'))
+    local stat, err = assert(fstat('./'))
     assert.is_nil(err)
-    assert.is_nil(eno)
     for k, isfn in pairs({
         dev = assert.is_int,
         ino = assert.is_int,
@@ -33,9 +32,8 @@ end
 
 function testcase.fstat_file_path()
     -- test that get stat by pathname
-    local stat, err, eno = assert(fstat('./fstat_test.lua'))
+    local stat, err = assert(fstat('./fstat_test.lua'))
     assert.is_nil(err)
-    assert.is_nil(eno)
     for k, isfn in pairs({
         dev = assert.is_int,
         ino = assert.is_int,
@@ -62,10 +60,9 @@ function testcase.fstat_file()
     -- test that get stat by file
     local stat = assert(fstat('./fstat_test.lua'))
     local f = assert(open('./fstat_test.lua'))
-    local filestat, err, eno = assert(fstat(f))
+    local filestat, err = assert(fstat(f))
     f:close()
     assert.is_nil(err)
-    assert.is_nil(eno)
     assert.equal(filestat, stat)
 end
 
@@ -74,19 +71,17 @@ function testcase.fstat_file_descriptor()
     local stat = assert(fstat('./fstat_test.lua'))
     local f = assert(open('./fstat_test.lua'))
     local fd = assert(fileno(f))
-    local fdstat, err, eno = assert(fstat(fd))
+    local fdstat, err = assert(fstat(fd))
     f:close()
     assert.is_nil(err)
-    assert.is_nil(eno)
     assert.equal(fdstat, stat)
 end
 
 function testcase.fstat_error()
     -- test that return error
-    local stat, err, eno = fstat('./unknowndir')
+    local stat, err = fstat('./unknowndir')
     assert.is_nil(stat)
-    assert.equal(errno[eno], errno.ENOENT)
-    assert.equal(err, errno.ENOENT.message)
+    assert.equal(err.type, errno.ENOENT)
 
     -- test that throws an error when file descriptor is out of range
     err = assert.throws(fstat, -1)
