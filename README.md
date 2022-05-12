@@ -40,8 +40,12 @@ print(dump(stat))
 -- }
 ```
 
+## Error Handling
 
-## stat, err, errno = fstat( v [, follow_symlink] )
+the following functions return the `error` object created by https://github.com/mah0x211/lua-errno module.
+
+
+## stat, err = fstat( v [, follow_symlink] )
 
 open a directory stream corresponding to the directory `name`.
 
@@ -68,7 +72,7 @@ open a directory stream corresponding to the directory `name`.
   - `ctime:integer`: time of last status change.
   - `perm:string`: file permission bits (include the sticky bit).
   - `type:string`: `nil` or one of the following; `'file'`, `'directory'`, `'symlink'`, `'character_device'`, `'block_device'`, `'socket'`, `'fifo'`.
-- `err:string`: error message on failure.
-- `errno:integer`: error number.
+- `err:error`: `error` object on failure.
+
 
 

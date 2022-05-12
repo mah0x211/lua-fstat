@@ -22,12 +22,13 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <lauxhlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+// lua
+#include <lua_errno.h>
 
 static int fstat_lua(lua_State *L)
 {
@@ -48,9 +49,8 @@ static int fstat_lua(lua_State *L)
         const char *path = lua_tostring(L, 1);
         if ((fd = open(path, flgs)) == -1) {
             lua_pushnil(L);
-            lua_pushstring(L, strerror(errno));
-            lua_pushinteger(L, errno);
-            return 3;
+            lua_errno_new(L, errno, "fstat");
+            return 2;
         }
         is_open = 1;
     } break;
@@ -80,9 +80,8 @@ static int fstat_lua(lua_State *L)
             close(fd);
         }
         lua_pushnil(L);
-        lua_pushstring(L, strerror(errno));
-        lua_pushinteger(L, errno);
-        return 3;
+        lua_errno_new(L, errno, "fstat");
+        return 2;
     } else if (is_open) {
         close(fd);
     }
@@ -134,6 +133,7 @@ static int fstat_lua(lua_State *L)
 
 LUALIB_API int luaopen_fstat(lua_State *L)
 {
+    lua_errno_loadlib(L);
     lua_pushcfunction(L, fstat_lua);
     return 1;
 }
