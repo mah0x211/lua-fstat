@@ -29,83 +29,31 @@
 #include <sys/types.h>
 #include <unistd.h>
 // lua
-#include <lua_errno.h>
+#include "lua_errno.h"
 
-static int fstat_lua(lua_State *L)
+static int stat2table(lua_State *L, struct stat *buf)
 {
-    int fd          = -1;
-    int is_open     = 0;
-    int flgs        = O_RDONLY | O_CLOEXEC;
-    struct stat buf = {0};
-    char perm[6]    = {0};
-
-    // followsymlinks option: default true
-    if (!lauxh_optboolean(L, 2, 1)) {
-        flgs |= O_NOFOLLOW;
-    }
-    lua_settop(L, 1);
-
-    switch (lua_type(L, 1)) {
-    case LUA_TSTRING: {
-        const char *path = lua_tostring(L, 1);
-        if ((fd = open(path, flgs)) == -1) {
-            lua_pushnil(L);
-            lua_errno_new(L, errno, "fstat");
-            return 2;
-        }
-        is_open = 1;
-    } break;
-
-    case LUA_TUSERDATA: {
-        FILE *f = lauxh_checkfile(L, 1);
-        fd      = fileno(f);
-    } break;
-
-    case LUA_TNUMBER: {
-        lua_Integer iv = lauxh_checkinteger(L, 1);
-        if (iv < 0 || iv > INT_MAX) {
-            return lauxh_argerror(L, 1, "integer (0-%d) expected, got %d",
-                                  INT_MAX, iv);
-        }
-        fd = iv;
-    } break;
-
-    default:
-        return lauxh_argerror(L, 1, "string, file or integer expected, got %s",
-                              luaL_typename(L, 1));
-    }
-
-    // got error
-    if (fstat(fd, &buf) == -1) {
-        if (is_open) {
-            close(fd);
-        }
-        lua_pushnil(L);
-        lua_errno_new(L, errno, "fstat");
-        return 2;
-    } else if (is_open) {
-        close(fd);
-    }
+    char perm[6] = {0};
 
     // set fields
     lua_createtable(L, 0, 14);
     // add descriptor
-    lauxh_pushint2tbl(L, "dev", buf.st_dev);
-    lauxh_pushint2tbl(L, "ino", buf.st_ino);
-    lauxh_pushint2tbl(L, "mode", buf.st_mode);
-    lauxh_pushint2tbl(L, "nlink", buf.st_nlink);
-    lauxh_pushint2tbl(L, "uid", buf.st_uid);
-    lauxh_pushint2tbl(L, "gid", buf.st_gid);
-    lauxh_pushint2tbl(L, "rdev", buf.st_rdev);
-    lauxh_pushint2tbl(L, "size", buf.st_size);
-    lauxh_pushint2tbl(L, "blksize", buf.st_blksize);
-    lauxh_pushint2tbl(L, "blocks", buf.st_blocks);
-    lauxh_pushint2tbl(L, "atime", buf.st_atime);
-    lauxh_pushint2tbl(L, "mtime", buf.st_mtime);
-    lauxh_pushint2tbl(L, "ctime", buf.st_ctime);
-    snprintf(perm, sizeof(perm), "%#o", buf.st_mode & 01777);
+    lauxh_pushint2tbl(L, "dev", buf->st_dev);
+    lauxh_pushint2tbl(L, "ino", buf->st_ino);
+    lauxh_pushint2tbl(L, "mode", buf->st_mode);
+    lauxh_pushint2tbl(L, "nlink", buf->st_nlink);
+    lauxh_pushint2tbl(L, "uid", buf->st_uid);
+    lauxh_pushint2tbl(L, "gid", buf->st_gid);
+    lauxh_pushint2tbl(L, "rdev", buf->st_rdev);
+    lauxh_pushint2tbl(L, "size", buf->st_size);
+    lauxh_pushint2tbl(L, "blksize", buf->st_blksize);
+    lauxh_pushint2tbl(L, "blocks", buf->st_blocks);
+    lauxh_pushint2tbl(L, "atime", buf->st_atime);
+    lauxh_pushint2tbl(L, "mtime", buf->st_mtime);
+    lauxh_pushint2tbl(L, "ctime", buf->st_ctime);
+    snprintf(perm, sizeof(perm), "%#o", buf->st_mode & 01777);
     lauxh_pushstr2tbl(L, "perm", perm);
-    switch (buf.st_mode & S_IFMT) {
+    switch (buf->st_mode & S_IFMT) {
     case S_IFREG:
         lauxh_pushstr2tbl(L, "type", "file");
         break;
@@ -130,6 +78,65 @@ static int fstat_lua(lua_State *L)
     }
 
     return 1;
+}
+
+static int stat_lua(lua_State *L, int flgs)
+{
+    const char *path = lua_tostring(L, 1);
+    struct stat buf  = {0};
+
+    if ((flgs & O_NOFOLLOW) ? lstat(path, &buf) : stat(path, &buf)) {
+        // got error
+        lua_pushnil(L);
+        lua_errno_new(L, errno, "fstat");
+        return 2;
+    }
+
+    return stat2table(L, &buf);
+}
+
+static int fstat_lua(lua_State *L)
+{
+    int fd          = -1;
+    int flgs        = O_RDONLY | O_CLOEXEC;
+    struct stat buf = {0};
+
+    // followsymlinks option: default true
+    if (!lauxh_optboolean(L, 2, 1)) {
+        flgs |= O_NOFOLLOW;
+    }
+    lua_settop(L, 1);
+
+    switch (lua_type(L, 1)) {
+    case LUA_TSTRING:
+        return stat_lua(L, flgs);
+
+    case LUA_TUSERDATA: {
+        FILE *f = lauxh_checkfile(L, 1);
+        fd      = fileno(f);
+    } break;
+
+    case LUA_TNUMBER: {
+        lua_Integer iv = lauxh_checkinteger(L, 1);
+        if (iv < 0 || iv > INT_MAX) {
+            return lauxh_argerror(L, 1, "integer (0-%d) expected, got %d",
+                                  INT_MAX, iv);
+        }
+        fd = iv;
+    } break;
+
+    default:
+        return lauxh_argerror(L, 1, "string, file or integer expected, got %s",
+                              luaL_typename(L, 1));
+    }
+
+    if (fstat(fd, &buf) == -1) {
+        // got error
+        lua_pushnil(L);
+        lua_errno_new(L, errno, "fstat");
+        return 2;
+    }
+    return stat2table(L, &buf);
 }
 
 LUALIB_API int luaopen_fstat(lua_State *L)
