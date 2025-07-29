@@ -47,7 +47,7 @@ the following functions return the `error` object created by https://github.com/
 
 ## stat, err = fstat( v [, follow_symlink] )
 
-open a directory stream corresponding to the directory `name`.
+Get file status information.
 
 **Parameters**
 
