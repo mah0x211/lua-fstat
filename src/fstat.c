@@ -20,16 +20,17 @@
  *  DEALINGS IN THE SOFTWARE.
  */
 
+// depend
+#include "lauxhlib.h"
+#include "lua_errno.h"
+// lua
+#include <lauxlib.h>
+// system
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-// lua
-#include "lua_errno.h"
 
 static int stat2table(lua_State *L, struct stat *buf)
 {
